@@ -2,11 +2,11 @@
   "name": "contact-backend-nerix",
   "version": "1.0.0",
   "description": "Contact Form Backend for Nerix",
-  "main": "dist/config/server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/config/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/config/server.js"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",

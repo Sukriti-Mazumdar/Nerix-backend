@@ -11,7 +11,9 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors(({
+  origin: "https://mynerix.com"
+})));
 app.use(express.json());
 app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));

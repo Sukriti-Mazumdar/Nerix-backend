@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import connectDB from "./db";
 import contactRoutes from "../routes/contactRoute";
 import helmet from "helmet";
@@ -58,6 +59,15 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? "connected" : "disconnected"
+  });
+});
 
 app.use("/api/contact", contactRoutes);
 

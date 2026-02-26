@@ -4,8 +4,15 @@ import Contact from "../models/contact";
 
 const router = Router();
 
+// Test endpoint to verify routing works
+router.get("/test", (req: Request, res: Response) => {
+  res.json({ message: "Contact route is working", timestamp: new Date().toISOString() });
+});
+
 router.post("/", async (req: Request, res: Response) => {
   const { name, email, subject, message } = req.body;
+
+  console.log("Received contact form submission:", { name, email, subject });
 
   if (!name || !email || !subject || !message) {
     return res.status(400).json({ error: "All fields are required" });
@@ -13,45 +20,50 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     // Save to database first
+    console.log("Attempting to save to database...");
     const newContact = new Contact({ name, email, subject, message });
     await newContact.save();
-    console.log("Contact saved to database:", newContact._id);
+    console.log("Contact saved to database successfully:", newContact._id);
 
-    // Try to send email, but don't fail if it doesn't work
-    try {
+    // Send email in background (non-blocking)
+    setImmediate(() => {
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn("Email credentials not configured, skipping email notification");
-      } else {
-        const transporter = nodemailer.createTransport({
-          host: "smtp.hostinger.com",
-          port: 465,
-          secure: true,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        await transporter.sendMail({
-          from: `"Website Contact" <${process.env.EMAIL_USER}>`,
-          replyTo: email,
-          to: process.env.EMAIL_USER,
-          subject: `New Enquiry: ${subject}`,
-          html: `
-            <h2>New Contact Form Submission</h2>
-            <p><b>Name:</b> ${name}</p>
-            <p><b>Email:</b> ${email}</p>
-            <p><b>Subject:</b> ${subject}</p>
-            <p><b>Message:</b><br/> ${message}</p>
-          `,
-        });
-        console.log("Email notification sent successfully");
+        return;
       }
-    } catch (emailError) {
-      console.error("Email sending failed (non-critical):", emailError);
-      // Don't fail the request if email fails
-    }
 
+      const transporter = nodemailer.createTransport({
+        host: "smtp.hostinger.com",
+        port: 465,
+        secure: true,
+        // Render networking may not have IPv6 egress; force IPv4
+        family: 4,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      transporter.sendMail({
+        from: `"Website Contact" <${process.env.EMAIL_USER}>`,
+        replyTo: email,
+        to: process.env.EMAIL_USER,
+        subject: `New Enquiry: ${subject}`,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><b>Name:</b> ${name}</p>
+          <p><b>Email:</b> ${email}</p>
+          <p><b>Subject:</b> ${subject}</p>
+          <p><b>Message:</b><br/> ${message}</p>
+        `,
+      }).then(() => {
+        console.log("Email notification sent successfully");
+      }).catch((emailError) => {
+        console.error("Email sending failed (non-critical):", emailError);
+      });
+    });
+
+    // Return success immediately after database save
     res.json({ success: true, message: "Your message has been received. We'll get back to you soon!" });
 
   } catch (error: unknown) {

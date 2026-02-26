@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import nodemailer from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 import Contact from "../models/contact";
 
 const router = Router();
@@ -32,7 +33,7 @@ router.post("/", async (req: Request, res: Response) => {
         return;
       }
 
-      const transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransport(<SMTPTransport.Options>{
         host: "smtp.hostinger.com",
         port: 465,
         secure: true,

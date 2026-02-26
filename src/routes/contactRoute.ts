@@ -35,8 +35,9 @@ router.post("/", async (req: Request, res: Response) => {
 
       const transporter = nodemailer.createTransport(<SMTPTransport.Options>{
         host: "smtp.hostinger.com",
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false,
+        requireTLS: true,
         // Render networking may not have IPv6 egress; force IPv4
         family: 4,
         auth: {

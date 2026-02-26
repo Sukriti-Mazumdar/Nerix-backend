@@ -49,10 +49,16 @@ router.post("/", async (req: Request, res: Response) => {
     }
     res.status(500).json({ error: errorMessage });
   }
-  router.get("/", async (req, res) => {
-  const contacts = await Contact.find().sort({ createdAt: -1 });
-  res.json(contacts);
 });
+
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    res.json(contacts);
+  } catch (error: unknown) {
+    console.error("Contact GET error:", error);
+    res.status(500).json({ error: "Failed to fetch contacts" });
+  }
 });
   
 export default router;
